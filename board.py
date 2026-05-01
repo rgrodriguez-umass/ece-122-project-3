@@ -1,4 +1,4 @@
-#Stores board, applies move, undo moves, check legal, serializez board state
+#Stores board, applies move, undo moves, check legal, serializes board state
 
 from __future__ import annotations
 
@@ -116,7 +116,32 @@ class Board:
             Access the piece using its starting position, then update both squares.
         """
         # TODO: Implement board update logic
-        pass
+        sr, sc = move.src
+        dr, dc = move.dst
+        piece = self.grid[sr][sc]
+        if piece is None:
+            raise ValueError("No piece found")
+        captured = self.grid[dr][dc]
+
+        move.moved_piece = piece
+        move.captured_piece = captured
+        move.prev_turn = self.turn
+        self.grid[dr][dc] = piece
+        self.grid[sr][sc] = None
+
+        if move.promotion and isinstance(piece, Pawn):
+            promo = move.promotion.lower()
+            if promo == "q":
+                self.grid[dr][dc] = Queen(piece.color)
+            elif promo == "r":
+                self.grid[dr][dc] = Rook(piece.color)
+            elif promo == "b":
+                self.grid[dr][dc] = Bishop(piece.color)
+            elif promo == "n":
+                self.grid[dr][dc] = Knight(piece.color)
+
+        self.turn = self.opposite(self.turn)
+        self.history.append(move)
 
     def undo_move(self, move: Move) -> None:
         #Restores moving piece to source, capture piece to dest, previous turn
@@ -159,7 +184,16 @@ class Board:
             Check piece color before generating moves.
         """
         # TODO: Collect moves from all pieces
-        pass
+        moves: List[Move] = []
+        for r in range(8):
+            for c in range(8):
+                piece = self.grid[r][c]
+                if piece is None:
+                    continue
+                if piece.color != self.turn:
+                    continue
+                moves.extend(piece.pseudo_legal_moves(self, r, c))
+        return moves
 
     def generate_legal_moves(self) -> List[Move]:
         """
@@ -308,7 +342,16 @@ class Board:
             Carefully map chess notation to array indices.
         """
         # TODO: Parse input into move coordinates
-        pass
+        fixed = text.strip().lower()
+        if len(fixed) is not in (4, 5):
+            raise ValueError("Invalid move")
+        origin = parse_square(fixed[:2])
+        dest = parse_square(fixed[2:4])
+        promo = text[4] if len(text) == 5 else None
+
+        return Move(src=origin, dst=dest, promotion=promo)
+
+
 
     def play_move_text(self, text: str) -> Move:
         #Parse move, apply, return move

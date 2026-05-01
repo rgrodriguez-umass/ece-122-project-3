@@ -117,7 +117,6 @@ class Piece:
         pass
 
     def _step_moves(self, board: "Board", r: int, c: int, deltas: List[Tuple[int, int]]) -> List[Move]:
-
         """
         Generate moves for pieces that move a fixed distance (one step per direction).
 
@@ -142,7 +141,15 @@ class Piece:
             Loop through each (dr, dc) in steps and check the resulting square.
         """
         # TODO: Implement step-based movement logic
-        pass
+        moves: List[Move] = []
+        for dr, dc in deltas:
+            nr, nc = r + dr, c + dc
+            if not in_bounds(nr, nc):
+                continue
+            target = board.grid[nr][nc]
+            if target is None or target.color != self.color:
+                moves.append(Move(src=(r, c), dst=(nr, nc)))
+        return moves
        
 
     def pseudo_legal_moves(self, board: "Board", r: int, c: int) -> List[Move]:
@@ -160,7 +167,7 @@ class Pawn(Piece):
     value = 100 #Worth 100 in ealuation function
 
     def pseudo_legal_moves(self, board: "Board", r: int, c: int) -> List[Move]:
-                """
+        """
         Generate all pseudo-legal moves for a pawn.
 
         Parameters:
@@ -189,7 +196,41 @@ class Pawn(Piece):
             Check forward square and diagonal squares separately.
         """
         # TODO: Implement pawn movement logic
-        pass
+        moves: List[Move] = []
+        if self.color == "w":
+            direction = -1
+        else:
+            direction = 1
+        if self.color == "w":
+            start_row = 6
+        else:
+            start_row = 1
+
+        nr = r + direction
+        if in_bounds(nr, c) and board.grid[nr][c] is None:
+            if nr in (0, 7):
+                for p in ["q", "r", "b", "n"]:
+                    moves.append(Move((r, c), (nr, c), promotion=p))
+            else:
+                moves.append(Move((r, c), (nr, c)))
+            if r == start_row:
+                nr2 = r + 2 * direction
+                if in_bounds(nr2, c) and board.grid[nr2][c] is None:
+                    moves.append(Move((r, c), (nr2, c)))
+
+        for dc in (-1, 1):
+            nr, nc = r + direction, c + dc
+            if not in_bounds(nr, nc):
+                continue
+            target = board.grid[nr][nc]
+            if target is not None and target.color != self.color:
+                if nr in (0, 7):
+                    for p in ["q", "r", "b", "n"]:
+                        moves.append(Move((r, c), (nr, nc), promotion=p))
+                else:
+                    moves.append(Move((r, c), (nr, nc)))
+
+        return moves
 
 #Same template now for rest
 class Knight(Piece):
@@ -197,7 +238,7 @@ class Knight(Piece):
     value = 320
 
     def pseudo_legal_moves(self, board: "Board", r: int, c: int) -> List[Move]:
-                """
+        """
         Generate all pseudo-legal moves for a knight.
 
         Parameters:
@@ -221,7 +262,12 @@ class Knight(Piece):
             Use a predefined list of 8 possible moves.
         """
         # TODO: Implement knight movement logic using step moves
-        pass
+        return self._step_moves(board, r, c, [
+            (-2, -1), (-2, 1),
+            (-1, -2), (-1, 2),
+            (1, -2), (1, 2),
+            (2, -1), (2, 1),
+        ])
 
 
 class Bishop(Piece):
