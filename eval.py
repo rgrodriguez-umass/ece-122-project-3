@@ -138,6 +138,14 @@ class Evaluator:
         return score
 #Returns score from perspective of side to move, makes negamax work naturally
     def evaluate(self, board: Board) -> int:
+        score = self.white_score(board)
+
+
+
+        if board.turn == "w":
+            return score
+        else:
+            return -score
                 """
         Evaluate the board position.
 
