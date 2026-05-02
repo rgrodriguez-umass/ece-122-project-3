@@ -1,4 +1,4 @@
-#Stores board, applies move, undo moves, check legal, serializes board state
+# Stores board, applies move, undo moves, check legal, serializez board state
 
 from __future__ import annotations
 
@@ -25,19 +25,19 @@ Square = Tuple[int, int]
 class Board:
     def __init__(self, setup: bool = True):
         self.grid: List[List[Optional[Piece]]] = [[None for _ in range(8)] for _ in range(8)]
-        #create grid
-        self.turn: str = "w" #White moves first
-        self.history: List[Move] = []#Stores moves for undo and logging
+        # create grid
+        self.turn: str = "w"  # White moves first
+        self.history: List[Move] = []  # Stores moves for undo and logging
         if setup:
-            self.setup_start() #Initialize board
+            self.setup_start()  # Initialize board
 
     @staticmethod
     def opposite(color: str) -> str:
-        #Returns opposite side
+        # Returns opposite side
         return "b" if color == "w" else "w"
 
     def setup_start(self) -> None:
-        #Place piece in position
+        # Place piece in position
         self.grid = [[None for _ in range(8)] for _ in range(8)]
         back_rank = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
         for c, cls in enumerate(back_rank):
@@ -50,20 +50,20 @@ class Board:
         self.history.clear()
 
     def clone(self) -> "Board":
-        #Creates a deep copy of the board so changes to the copy do not affect the original.
+        # Creates a deep copy of the board so changes to the copy do not affect the original.
         b = Board(setup=False)
         b.turn = self.turn
         b.grid = [[p.copy() if p is not None else None for p in row] for row in self.grid]
         return b
 
     def piece_at(self, r: int, c: int) -> Optional[Piece]:
-        #Returns piece at square
+        # Returns piece at square
         if not in_bounds(r, c):
             return None
         return self.grid[r][c]
 
     def king_pos(self, color: str) -> Optional[Square]:
-        #Finds king for color
+        # Finds king for color
         for r in range(8):
             for c in range(8):
                 p = self.grid[r][c]
@@ -72,8 +72,8 @@ class Board:
         return None
 
     def square_attacked(self, r: int, c: int, by_color: str) -> bool:
-        #Checkif square is attacked by color,
-        #Loops through all pieces of color and checks whether any attached square matches
+        # Checkif square is attacked by color,
+        # Loops through all pieces of color and checks whether any attached square matches
         for rr in range(8):
             for cc in range(8):
                 p = self.grid[rr][cc]
@@ -85,7 +85,7 @@ class Board:
         return False
 
     def in_check(self, color: Optional[str] = None) -> bool:
-        #Determine if color isin chechk
+        # Determine if color isin chechk
         if color is None:
             color = self.turn
         kpos = self.king_pos(color)
@@ -116,35 +116,10 @@ class Board:
             Access the piece using its starting position, then update both squares.
         """
         # TODO: Implement board update logic
-        sr, sc = move.src
-        dr, dc = move.dst
-        piece = self.grid[sr][sc]
-        if piece is None:
-            raise ValueError("No piece found")
-        captured = self.grid[dr][dc]
-
-        move.moved_piece = piece
-        move.captured_piece = captured
-        move.prev_turn = self.turn
-        self.grid[dr][dc] = piece
-        self.grid[sr][sc] = None
-
-        if move.promotion and isinstance(piece, Pawn):
-            promo = move.promotion.lower()
-            if promo == "q":
-                self.grid[dr][dc] = Queen(piece.color)
-            elif promo == "r":
-                self.grid[dr][dc] = Rook(piece.color)
-            elif promo == "b":
-                self.grid[dr][dc] = Bishop(piece.color)
-            elif promo == "n":
-                self.grid[dr][dc] = Knight(piece.color)
-
-        self.turn = self.opposite(self.turn)
-        self.history.append(move)
+        pass
 
     def undo_move(self, move: Move) -> None:
-        #Restores moving piece to source, capture piece to dest, previous turn
+        # Restores moving piece to source, capture piece to dest, previous turn
         sr, sc = move.src
         dr, dc = move.dst
         if move.prev_turn is None:
@@ -156,7 +131,7 @@ class Board:
             self.history.pop()
 
     def undo_last(self) -> Move:
-        #Undo recent
+        # Undo recent
         if not self.history:
             raise ValueError("No moves to undo")
         move = self.history[-1]
@@ -164,6 +139,16 @@ class Board:
         return move
 
     def generate_pseudo_legal_moves(self) -> List[Move]:
+        list = []
+        for xIndex in range(len(self.grid)):  # loop through x axis values of Board
+            for yIndex in range(len(self.grid[xIndex])):  # loop through y axis values of Board
+                piece = self.piece_at(xIndex, yIndex)  # get the piece at the given index
+                if self.turn == piece.value:  # if the color of the turn matches the piece,
+                    for i in piece.pseudo_legal_moves(xIndex,
+                                                      yIndex):  # loop through the list of possible moves for that piece
+                        list.append(i)  # add each possible move to the output list
+        return list  # return the list of all moves
+
         """
         Generate all pseudo-legal moves for the current player.
 
@@ -184,16 +169,7 @@ class Board:
             Check piece color before generating moves.
         """
         # TODO: Collect moves from all pieces
-        moves: List[Move] = []
-        for r in range(8):
-            for c in range(8):
-                piece = self.grid[r][c]
-                if piece is None:
-                    continue
-                if piece.color != self.turn:
-                    continue
-                moves.extend(piece.pseudo_legal_moves(self, r, c))
-        return moves
+        pass
 
     def generate_legal_moves(self) -> List[Move]:
         """
@@ -222,6 +198,9 @@ class Board:
         pass
 
     def is_game_over(self) -> bool:
+        if len(self.generate_legal_moves()) == 0:
+            return True
+        return False
         """
         Determine whether the game has ended.
 
@@ -234,7 +213,7 @@ class Board:
         Rules:
             - Game is over if:
                  The current player has no legal moves
-                
+
             - Do not modify the board
 
         Hint:
@@ -244,6 +223,15 @@ class Board:
         pass
 
     def result(self) -> str:
+        if not self.is_game_over():
+            return "ongoing"
+        else:
+            if self.in_check("w"):
+                return "Black wins by checkmate"
+            elif self.in_check("b"):
+                return "White wins by checkmate"
+            else:
+                return "Draw by stalemate"
 
         """
         Return the result of the game.
@@ -257,7 +245,7 @@ class Board:
             ● "draw by stalemate"
 
         Rules:
-            
+
         - If no legal moves exist:
             If in check → opponent wins
             Otherwise → draw (stalemate)
@@ -269,14 +257,14 @@ class Board:
         pass
 
     def position_key(self) -> str:
-        #Builds a string representation of the board plus side to move.
+        # Builds a string representation of the board plus side to move.
         rows = []
         for r in range(8):
             rows.append("".join(symbol_from_piece(p) for p in self.grid[r]))
         return f"{self.turn}|" + "/".join(rows)
 
     def to_text(self) -> str:
-        #Serialize board to plain text
+        # Serialize board to plain text
         lines = [f"turn {self.turn}"]
         for r in range(8):
             lines.append("".join(symbol_from_piece(p) for p in self.grid[r]))
@@ -284,7 +272,7 @@ class Board:
 
     @classmethod
     def from_text(cls, text: str) -> "Board":
-        #Loads board from text
+        # Loads board from text
         lines = [ln.strip() for ln in text.splitlines() if ln.strip() and not ln.strip().startswith("#")]
         if len(lines) < 9:
             raise ValueError("Position file must contain one turn line and 8 board lines")
@@ -298,13 +286,13 @@ class Board:
         for r in range(8):
             row = lines[1 + r]
             if len(row) != 8:
-                raise ValueError(f"Row {r+1} must have exactly 8 characters")
+                raise ValueError(f"Row {r + 1} must have exactly 8 characters")
             for c, ch in enumerate(row):
                 board.grid[r][c] = piece_from_symbol(ch)
         return board
 
     def __str__(self) -> str:
-        #Create display
+        # Create display
         out = []
         out.append("    a   b   c   d   e   f   g   h")
         out.append("  +---+---+---+---+---+---+---+---+")
@@ -342,19 +330,10 @@ class Board:
             Carefully map chess notation to array indices.
         """
         # TODO: Parse input into move coordinates
-        fixed = text.strip().lower()
-        if len(fixed) is not in (4, 5):
-            raise ValueError("Invalid move")
-        origin = parse_square(fixed[:2])
-        dest = parse_square(fixed[2:4])
-        promo = text[4] if len(text) == 5 else None
-
-        return Move(src=origin, dst=dest, promotion=promo)
-
-
+        pass
 
     def play_move_text(self, text: str) -> Move:
-        #Parse move, apply, return move
+        # Parse move, apply, return move
         move = self.try_parse_move(text)
         self.apply_move(move)
         return move
