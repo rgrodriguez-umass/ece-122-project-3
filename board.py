@@ -79,7 +79,7 @@ class Board:
                 p = self.grid[rr][cc]
                 if p is None or p.color != by_color:
                     continue
-                for ar, ac in p.attacks(self, rr, cc):
+                for ar, ac in p.attacked(self, rr, cc):
                     if (ar, ac) == (r, c):
                         return True
         return False

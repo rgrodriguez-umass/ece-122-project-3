@@ -10,7 +10,7 @@ Piece refers to Board, if you don't have this, it'd create forward-reference iss
 """
 from dataclasses import dataclass  # dataclass lets us define Move with minimal boilerplate.
 
-from typing import List, Optional, Tuple, TYPE_CHECKING
+from typing import List, Optional, Tuple, TYPE_CHECKING, Any
 
 # List, Optional, Tuple are type annotations.
 # TYPE_CHECKING is being used to avoid circular imports at runtime.
@@ -89,8 +89,8 @@ class Piece:
         # Creates a new piece of the same type and color,used when cloning boards.
         return type(self)(self.color)
 
-    def _slide_moves(self, board: "Board", r: int, c: int, dirs: List[Tuple[int, int]]) -> List[Move]:
-        list = []
+def _slide_moves(board: "Board", r: int, c: int, dirs: List[Tuple[int, int]]) -> List[Move]:
+        move = []
         start_piece = board.piece_at(r, c)
         for dr, dc in dirs:
             rNext = r + dr
@@ -98,12 +98,11 @@ class Piece:
             while 0 <= rNext <= 8 and 0 <= cNext <= 8:  # while the next square (d hat) is on the grid,
                 piece = board.piece_at(rNext, cNext)
                 if piece is None:  # if there isn't a piece there,
-                    list.append(Move((r, c), (rNext, cNext), start_piece, None))  # add the move to possible moves.
+                    move.append(Move((r, c), (rNext, cNext), start_piece, None))  # add the move to possible moves.
                     rNext += dr  # now we move in that direction to be repeated again.
                     cNext += dc  #
-                elif piece.value == board.opposite(
-                        board.turn):  # if there IS a piece and it's opposite to the moves color,
-                    list.append(Move((r, c), (rNext, cNext), start_piece, piece))  # add that to the moves
+                elif piece.value == board.opposite(board.turn):  # if there IS a piece and it's opposite to the moves color,
+                    move.append(Move((r, c), (rNext, cNext), start_piece, piece))  # add that to the moves
                     break
                 else:  # otherwise its our piece, and therefore we can't go there
                     break
