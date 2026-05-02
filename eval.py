@@ -164,7 +164,7 @@ class Evaluator:
             ● Must not leave the board changed after evaluation
 
         Hint:
-            Use white_score(board), then adjust the sign based on whose turn it is.
+            Use white_score(board), then adjust the sign based on whose turn it is. 
         """
         # TODO: Implement board evaluation
         pass

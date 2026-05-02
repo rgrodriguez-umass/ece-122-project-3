@@ -85,7 +85,7 @@ class Board:
         return False
 
     def in_check(self, color: Optional[str] = None) -> bool:
-        # Determine if color isin chechk
+        # Determine if color isin check
         if color is None:
             color = self.turn
         kpos = self.king_pos(color)
