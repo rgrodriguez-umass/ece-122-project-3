@@ -107,37 +107,18 @@ class Piece:
                     break
                 else:  # otherwise its our piece, and therefore we can't go there
                     break
-        return list
-
-    """
-     Generate moves for pieces that move continuously in a direction (sliding pieces).
-
-     Parameters:
-         board: the current board object
-         r: current row of the piece
-         c: current column of the piece
-         directions: list of (row_change, col_change) pairs representing directions
-
-     Output:
-         A list of Move objects representing valid moves.
-
-     Rules:
-         - For each direction, keep moving until:
-             • You go out of bounds
-             • You hit another piece
-         - If a square is empty -> add move and continue
-         - If it has an enemy piece -> add move and STOP in that direction
-         - If it has your own piece -> STOP immediately (do not add move)
-         - Do not modify the board
-
-     Hint:
-         Use a loop to continue stepping in each direction.
-     """
-    # TODO: Implement sliding movement logic
-    pass
-
+        return move
 
 def _step_moves(self, board: "Board", r: int, c: int, deltas: List[Tuple[int, int]]) -> List[Move]:
+    moves: List[Move] = []
+    for dr, dc in deltas:
+        nr, nc = r + dr, c + dc
+        if not in_bounds(nr, nc):
+            continue
+        target = board.grid[nr][nc]
+        if target is None or target.color != self.color:
+            moves.append(Move(src=(r, c), dst=(nr, nc)))
+    return moves
     """
     Generate moves for pieces that move a fixed distance (one step per direction).
 
@@ -161,8 +142,6 @@ def _step_moves(self, board: "Board", r: int, c: int, deltas: List[Tuple[int, in
     Hint:
         Loop through each (dr, dc) in steps and check the resulting square.
     """
-    # TODO: Implement step-based movement logic
-    pass
 
 
 def pseudo_legal_moves(self, board: "Board", r: int, c: int) -> List[Move]:
@@ -181,7 +160,42 @@ class Pawn(Piece):
     value = 100  # Worth 100 in ealuation function
 
     def pseudo_legal_moves(self, board: "Board", r: int, c: int) -> List[Move]:
-        """
+        moves: List[Move] = []
+        if self.color == "w":
+            direction = -1
+        else:
+            direction = 1
+        if self.color == "w":
+            start_row = 6
+        else:
+            start_row = 1
+
+        nr = r + direction
+        if in_bounds(nr, c) and board.grid[nr][c] is None:
+            if nr in (0, 7):
+                for p in ["q", "r", "b", "n"]:
+                    moves.append(Move((r, c), (nr, c), promotion=p))
+            else:
+                moves.append(Move((r, c), (nr, c)))
+            if r == start_row:
+                nr2 = r + 2 * direction
+                if in_bounds(nr2, c) and board.grid[nr2][c] is None:
+                    moves.append(Move((r, c), (nr2, c)))
+
+        for dc in (-1, 1):
+            nr, nc = r + direction, c + dc
+            if not in_bounds(nr, nc):
+                continue
+            target = board.grid[nr][nc]
+            if target is not None and target.color != self.color:
+                if nr in (0, 7):
+                    for p in ["q", "r", "b", "n"]:
+                        moves.append(Move((r, c), (nr, nc), promotion=p))
+                else:
+                    moves.append(Move((r, c), (nr, nc)))
+
+        return moves
+"""
 Generate all pseudo-legal moves for a pawn.
 
 Parameters:
@@ -209,9 +223,6 @@ Rules:
 Hint:
     Check forward square and diagonal squares separately.
 """
-        # TODO: Implement pawn movement logic
-
-    pass
 
 
 # Same template now for rest
@@ -220,7 +231,13 @@ class Knight(Piece):
     value = 320
 
     def pseudo_legal_moves(self, board: "Board", r: int, c: int) -> List[Move]:
-        """
+        return self._step_moves(board, r, c, [
+            (-2, -1), (-2, 1),
+            (-1, -2), (-1, 2),
+            (1, -2), (1, 2),
+            (2, -1), (2, 1),
+        ])
+"""
 Generate all pseudo-legal moves for a knight.
 
 Parameters:
@@ -243,9 +260,6 @@ Rules:
 Hint:
     Use a predefined list of 8 possible moves.
 """
-        # TODO: Implement knight movement logic using step moves
-
-    pass
 
 
 class Bishop(Piece):
