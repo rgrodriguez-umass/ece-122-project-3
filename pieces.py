@@ -323,7 +323,7 @@ PIECE_MAP = {
 }
 
 
-# Converts char from text board file into a piece object/None
+# Converts char from text board file into a piece object
 def piece_from_symbol(ch: str) -> Optional[Piece]:
     if ch == ".":
         return None
