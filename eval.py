@@ -146,7 +146,7 @@ class Evaluator:
             return score
         else:
             return -score
-                """
+        """
         Evaluate the board position.
 
         Parameters:

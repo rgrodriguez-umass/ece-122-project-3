@@ -1,5 +1,5 @@
 from __future__ import annotations
-#File implements decision makinh
+#File implements decision making
 import math # For infinity
 import time # For optional time limits
 from dataclasses import dataclass #Transposition table entries
@@ -10,7 +10,7 @@ from eval import Evaluator
 from movegen import ordered_moves
 from pieces import Move
 
-MATE_SCORE = 100000 #Used to represent checkmare
+MATE_SCORE = 100000 #Used to represent checkmate
 
 
 @dataclass #Transposition table record, stores depth score
