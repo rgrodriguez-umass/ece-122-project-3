@@ -94,6 +94,32 @@ class Board:
         return self.square_attacked(kpos[0], kpos[1], self.opposite(color))
 
     def apply_move(self, move: Move) -> None:
+        sr, sc = move.src
+        dr, dc = move.dst
+        piece = self.grid[sr][sc]
+        if piece is None:
+            raise ValueError("No piece found")
+        captured = self.grid[dr][dc]
+
+        move.moved_piece = piece
+        move.captured_piece = captured
+        move.prev_turn = self.turn
+        self.grid[dr][dc] = piece
+        self.grid[sr][sc] = None
+
+        if move.promotion and isinstance(piece, Pawn):
+            promo = move.promotion.lower()
+            if promo == "q":
+                self.grid[dr][dc] = Queen(piece.color)
+            elif promo == "r":
+                self.grid[dr][dc] = Rook(piece.color)
+            elif promo == "b":
+                self.grid[dr][dc] = Bishop(piece.color)
+            elif promo == "n":
+                self.grid[dr][dc] = Knight(piece.color)
+
+        self.turn = self.opposite(self.turn)
+        self.history.append(move)
         """
         Apply a move to the board.
 
@@ -172,6 +198,23 @@ class Board:
         pass
 
     def generate_legal_moves(self) -> List[Move]:
+        legal_moves: List[Move] = []
+
+        moves = self.generate_pseudo_legal_moves()
+
+        for move in moves:
+            # Apply move temporarily
+            self.apply_move(move)
+
+            # After apply_move, turn has switched
+            # So we check the ORIGINAL player (opposite of current turn)
+            if not self.in_check(self.opposite(self.turn)):
+                legal_moves.append(move)
+
+            # Undo move
+            self.undo_move(move)
+
+        return legal_moves
         """
         Generate all legal moves for the current player.
 
@@ -311,6 +354,14 @@ class Board:
         return "\n".join(out)
 
     def try_parse_move(self, text: str) -> Move:
+        fixed = text.strip().lower()
+        if len(fixed) not in (4, 5):
+            raise ValueError("Invalid move")
+        origin = parse_square(fixed[:2])
+        dest = parse_square(fixed[2:4])
+        promo = text[4] if len(text) == 5 else None
+
+        return Move(src=origin, dst=dest, promotion=promo)
         """
         Convert a user input string into a Move object.
 
